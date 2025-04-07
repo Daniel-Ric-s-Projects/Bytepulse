@@ -38,8 +38,8 @@ intents: [
 1. **Clone the repository:**
 
    ```bash
-   git clone https://github.com/yourusername/nebula-nexus.git
-   cd nebula-nexus
+   git clone https://github.com/Daniel-Ric/Bytepulse.git
+   cd Bytepulse
    ```
 
 2. **Install dependencies:**
@@ -57,7 +57,7 @@ intents: [
 ## Folder Structure
 
 ```
-nebula-nexus/
+Bytepulse/
 ├── commands/
 │   └── ping.js        # Example slash command
 ├── modules/
