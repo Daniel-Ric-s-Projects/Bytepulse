@@ -1,4 +1,4 @@
-const { Client, Collection, GatewayIntentBits } = require('discord.js');
+const { Client, Collection, GatewayIntentBits, Partials } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
@@ -13,13 +13,35 @@ for (const dir of requiredDirs) {
     }
 }
 
+function debounce(func, wait) {
+    let timeout;
+    return (...args) => {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), wait);
+    };
+}
+
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildMembers,
+        GatewayIntentBits.GuildBans,
+        GatewayIntentBits.GuildEmojisAndStickers,
+        GatewayIntentBits.GuildIntegrations,
+        GatewayIntentBits.GuildWebhooks,
+        GatewayIntentBits.GuildInvites,
+        GatewayIntentBits.GuildVoiceStates,
+        GatewayIntentBits.GuildPresences,
         GatewayIntentBits.GuildMessages,
-        GatewayIntentBits.MessageContent 
-    ]
+        GatewayIntentBits.GuildMessageReactions,
+        GatewayIntentBits.GuildMessageTyping,
+        GatewayIntentBits.DirectMessages,
+        GatewayIntentBits.DirectMessageReactions,
+        GatewayIntentBits.DirectMessageTyping,
+        GatewayIntentBits.MessageContent,
+        GatewayIntentBits.GuildScheduledEvents
+    ],
+    partials: [Partials.Channel, Partials.Message, Partials.GuildMember, Partials.User]
 });
 
 client.commands = new Collection();
@@ -62,7 +84,7 @@ function syncCommands() {
         .catch(error => console.error(`[${new Date().toISOString()}] Command sync failed:`, error));
 }
 
-fs.watch(commandsPath, (eventType, filename) => {
+fs.watch(commandsPath, debounce((eventType, filename) => {
     if (filename && filename.endsWith('.js')) {
         console.log(`[${new Date().toISOString()}] ${eventType} detected in "${filename}". Reloading commands...`);
         loadCommands();
@@ -72,7 +94,7 @@ fs.watch(commandsPath, (eventType, filename) => {
             console.log(`[${new Date().toISOString()}] Client application not ready, syncing on "ready" event.`);
         }
     }
-});
+}, 100));
 
 const modulesPath = path.join(__dirname, 'modules');
 function loadModules() {
@@ -96,12 +118,12 @@ function loadModules() {
 
 loadModules();
 
-fs.watch(modulesPath, (eventType, filename) => {
+fs.watch(modulesPath, debounce((eventType, filename) => {
     if (filename && filename.endsWith('.js')) {
         console.log(`[${new Date().toISOString()}] ${eventType} detected in module "${filename}". Reloading modules...`);
         loadModules();
     }
-});
+}, 100));
 
 const configDir = path.join(__dirname, 'config');
 client.config = {};
@@ -121,12 +143,12 @@ function loadConfigs() {
 
 loadConfigs();
 
-fs.watch(configDir, (eventType, filename) => {
+fs.watch(configDir, debounce((eventType, filename) => {
     if (filename && filename.endsWith('.json')) {
         console.log(`[${new Date().toISOString()}] ${eventType} detected in config file "${filename}". Reloading configs...`);
         loadConfigs();
     }
-});
+}, 100));
 
 client.once('ready', async () => {
     const now = new Date();
