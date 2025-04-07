@@ -14,7 +14,12 @@ for (const dir of requiredDirs) {
 }
 
 const client = new Client({
-    intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers]
+    intents: [
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMembers,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.MessageContent 
+    ]
 });
 
 client.commands = new Collection();
@@ -76,7 +81,12 @@ function loadModules() {
         const filePath = path.join(modulesPath, file);
         try {
             delete require.cache[require.resolve(filePath)];
-            require(filePath)(client, axios);
+            const mod = require(filePath);
+            if (typeof mod === 'function') {
+                mod(client, axios);
+            } else {
+                console.error(`[${new Date().toISOString()}] Module "${file}" does not export a function.`);
+            }
         } catch (error) {
             console.error(`[${new Date().toISOString()}] Error loading module "${file}":`, error);
         }
